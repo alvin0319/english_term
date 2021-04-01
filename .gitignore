@@ -1,0 +1,7 @@
+node_modules/
+mapper.js
+world_encode.txt
+word_eng.txt
+word_kor.txt
+package-lock.json
+package.json
