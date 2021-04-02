@@ -53,7 +53,7 @@
 		}
 
 		function randEngTerm(){
-			const values = Object.values(parsed);
+			const values = Object.keys(parsed);
 			const _term = values[Math.floor(Math.random() * values.length)];
 			const _answer = parsed[_term];
 			return [_term, _answer];
@@ -151,6 +151,7 @@
 				funcName = "randEngTerm";
 			}
 			console.log(problem);
+			console.log(rand);
 			term = problem[0];
 			answer = problem[1];
 			//$("#card-text").text(term);
