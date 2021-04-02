@@ -55,7 +55,8 @@
 		function randEngTerm(){
 			const values = Object.values(parsed);
 			const _term = values[Math.floor(Math.random() * values.length)];
-			answer = parsed[_term];
+			const _answer = parsed[_term];
+			return [_term, _answer];
 		}
 
 		function rand_term(){
