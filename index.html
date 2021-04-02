@@ -7,15 +7,218 @@
 			integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
 			crossorigin="anonymous"></script>
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 	<!-- <script src="/js/word.js"></script>
 	-->
 	<script type="text/javascript">
+		const mt_rand = (min, max) => {
+			return Math.floor(Math.random() * (max - min + 1) + min);
+		};
+		let parsed;
+		let term = undefined;
+		let answer = undefined;
+		let answerIndex = undefined;
+		let keys = undefined;
 		$(document).ready(() => {
 			$("#learn-terms").on("click", (e) => {
 				e.preventDefault();
-				$("#term").innerText = "";
+				//$("#term").innerText = "";
+				buildButtons();
+			});
+			axios({
+				method: "get",
+				url: 'https://raw.githubusercontent.com/alvin0319/english_term/master/word.json'
+			}).then((response) => {
+				parsed = response.data;
+				console.log("Fetch done");
 			});
 		});
+
+		/**
+		 * @return string[]
+		 */
+		function randKorTerm(){
+			const values = Object.values(parsed);
+			const _term = values[Math.floor(Math.random() * values.length)];
+			let _answer;
+			const eng = Object.keys(parsed);
+			const kor = Object.values(parsed);
+			for(let i = 0; i < Object.keys(eng).length; i++){
+				if(_term === kor[i]){
+					_answer = eng[i];
+					break;
+				}
+			}
+			return [_term, _answer];
+		}
+
+		function randEngTerm(){
+			const values = Object.values(parsed);
+			const _term = values[Math.floor(Math.random() * values.length)];
+			answer = parsed[_term];
+		}
+
+		function rand_term(){
+			let values;
+			//let keys;
+
+			const rand = mt_rand(0, 1);
+
+			if(rand === 0){
+				// 한글 -> 영어 맞추기
+				values = Object.values(parsed);
+				keys = false;
+			}else{
+				// 영어 -> 한글 맞추기
+				values = Object.keys(parsed);
+				keys = true;
+			}
+			const _term = values[Math.floor(Math.random() * values.length)];
+			let _answer;
+			if(keys){
+				// 영어 -> 한글을 맞출때에는 term이 키에 들어가면 정답 유추가 가능
+				_answer = parsed[_term];
+			}else{
+				// 한글 -> 영어를 맞출때
+				const eng = Object.keys(parsed);
+				const kor = Object.values(parsed);
+				for(let i = 0; i < Object.keys(eng).length; i++){
+					if(_term === kor[i]){
+						_answer = eng[i];
+						break;
+					}
+				}
+			}
+
+			return [
+				_term,
+				_answer
+			];
+
+			/*
+			<div class="card text-center">
+  <div class="card-header">Featured</div>
+  <div class="card-body">
+    <h5 class="card-title">Special title treatment</h5>
+    <p class="card-text">
+      With supporting text below as a natural lead-in to additional content.
+    </p>
+    <a href="#" class="btn btn-primary">Button</a>
+  </div>
+  <div class="card-footer text-muted">2 days ago</div>
+</div>
+			 */
+		}
+
+		function buildButtons(){
+			$("#term").text("")
+				.append($("<div>", {
+						class: "card text-center"
+					})
+						.append($("<div>", {
+								class: "card-header",
+								html: "영단어 뜻 맞추기"
+							})
+						)
+						.append($("<div>", {
+								class: "card-body"
+							})
+								.append($("<div>", {
+										class: "card-title",
+									id: "card-title",
+										html: "다음 단어의 " + (keys ? "뜻은?" : "영단어는?")
+									})
+								)
+								.append($("<p class='card-text' id='card-text'></p>")
+										.append($("<div>", {
+												id: "answers"
+											})
+										)
+								)
+						)
+				);
+			let problem;
+
+			const rand = mt_rand(0, 1);
+			let funcName;
+
+			if(rand === 1){
+				problem = randKorTerm();
+				funcName = "randKorTerm";
+			}else{
+				problem = randEngTerm();
+				funcName = "randEngTerm";
+			}
+			console.log(problem);
+			term = problem[0];
+			answer = problem[1];
+			//$("#card-text").text(term);
+			$("#card-title")
+			.text("다음 단어의 " + (keys ? "뜻은?" : "영단어는: " + term));
+
+			let problems = [
+				answer
+			];
+			for(let i = 0; i < 3; i++){
+				switch(funcName){
+					case "randKorTerm":
+						problems.push(randKorTerm()[1]);
+						break;
+					case "randEngTerm":
+						problems.push(randEngTerm()[1]);
+						break;
+				}
+			}
+
+			problems = shuffle(problems);
+
+			answerIndex = problems.indexOf(answer);
+
+			let num = 0;
+			for(const t of problems){
+				$("#answers")
+					.append($("<a>", {
+							href: "#",
+							class: "btn btn-primary",
+							id: num,
+							html: t
+						})
+					);
+				num++;
+			}
+			for(let i = 0; i < 4; i++){
+				if(i === answerIndex)
+					continue;
+				$(`#${i}`).on("click", (e) => {
+					e.preventDefault();
+					alert("틀렸습니다! 다시 시도해보세요.");
+				});
+			}
+			$(`#${answerIndex}`).on("click", (e) => {
+				e.preventDefault();
+				alert("정답입니다.");
+				buildButtons();
+			});
+		}
+
+		function shuffle(array){
+			let currentIndex = array.length, temporaryValue, randomIndex;
+
+			// While there remain elements to shuffle...
+			while(0 !== currentIndex){
+
+				// Pick a remaining element...
+				randomIndex = Math.floor(Math.random() * currentIndex);
+				currentIndex -= 1;
+
+				// And swap it with the current element.
+				temporaryValue = array[currentIndex];
+				array[currentIndex] = array[randomIndex];
+				array[randomIndex] = temporaryValue;
+			}
+
+			return array;
+		}
 	</script>
 </head>
 <body>
@@ -27,7 +230,7 @@
 	<div class="container">
 		<a class="navbar-brand" href="#">
 			<img
-					src="https://mdbootstrap.com/img/logo/mdb-transaprent-noshadows.png"
+					src="https://raw.githubusercontent.com/alvin0319/english_term/master/favicon.png"
 					height="30"
 					alt=""
 					loading="lazy"
@@ -54,6 +257,7 @@
 				</div>
 			</div>
 		</div>
+		<a href="#" class="btn btn-primary" onclick="buildButtons()">로드 안될시 클릭</a>
 	</div>
 </main>
 <footer class="text-center text-white fixed-bottom" style="background-color: #21081a;">
