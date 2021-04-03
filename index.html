@@ -128,7 +128,7 @@
 								.append($("<div>", {
 										class: "card-title",
 									id: "card-title",
-										html: "다음 단어의 " + (keys ? "뜻은?" : "영단어는?")
+										html: "다음 단어의 " + (!keys ? "뜻은?" : "영단어는?")
 									})
 								)
 								.append($("<p class='card-text' id='card-text'></p>")
